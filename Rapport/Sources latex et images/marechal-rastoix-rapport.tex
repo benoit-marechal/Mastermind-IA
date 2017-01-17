@@ -1,0 +1,788 @@
+% Rapport : IA - Mastermind
+% Décembre 2006
+% Module : Algorithmique & complexité
+% Auteur :  Benoit Maréchal & Marc Rastoix
+%
+
+
+\documentclass[12pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{epstopdf}
+
+                               % Activate to display a given date or no date
+
+
+\usepackage{times}
+\usepackage[frenchb]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{amssymb,latexsym,amsmath,graphicx,pstricks,pst-node}
+%\usepackage{layout}
+\setlength{\textheight}{23cm}
+\setlength{\textwidth}{16.6cm}
+\setlength{\hoffset}{0cm}
+\setlength{\voffset}{-2cm}
+\setlength{\marginparwidth}{0cm}
+\setlength{\marginparsep}{0cm}
+%\setlength{\headheight}{0.0in}
+%\setlength{\headsep}{0.0in}
+\setlength{\oddsidemargin}{0cm}
+%\setlength{\parindent}{0pt}
+\usepackage{listings}						%Pour mettre en forme tous ce qui est 'code source'
+
+\sloppy  									%??
+
+\bibliographystyle{plain}
+
+
+
+\begin{document}
+
+\includegraphics[height=2 cm]{logo_ub.pdf}
+\hspace{9cm}
+\includegraphics[height=2 cm]{logo_ufr.pdf}\\
+
+\vspace{3.5cm}
+
+\begin{center}
+\large{M1 Informatique - Module Algorithmique et complexité}\\
+\quad \ \
+
+\vspace{2cm}
+\huge{Rapport} \quad \ \
+
+\vspace{0.5cm}
+\huge{Intelligence Artificielle pour le Mastermind} 
+
+\vspace{2cm}
+%\includegraphics[height=4 cm]{chaise.png}
+
+\quad \\
+\vspace{1.5cm}
+\large{Benoît MARECHAL et Marc RASTOIX}\\
+\vspace{0.5cm}
+\large{Encadrant : Jean-Jacques CHABRIER}
+\end{center}
+
+%\maketitle
+\titlepage
+
+\newpage
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+
+%Les blocs de code
+\lstset{numbers=left, numberstyle=\small,breaklines=true, stepnumber=1, numbersep=10pt, frameround=fttt, basicstyle=\small}
+
+\section{Introduction}
+% Debut document
+\subsection{Rappel du sujet}
+
+Dans le cadre du module d'Algorithmique et complexité du Master 1 d'Informatique, nous avons à réaliser le projet d'intelligence artificielle pour le Mastermind. Le but de ce projet et de proposer et de programmer les meilleures stratégies possibles de résolution de ce jeu. Le programme doit donc tirer au hasard une combinaison puis la deviner en posant le minimum de questions possibles.
+On cherche à connaître ce nombre de questions ainsi que l'efficacité de nos algorithmes à travers leur complexité, leur temps d'exécution et leur nombre de tentatives maximales.
+
+\subsection{Historique et règles du mastermind}
+
+Le Mastermind est un jeu de société inventé par Marco Meirovitz dans les années 60. C'est un jeu de réflexion et de déduction à deux joueurs. Au même titre que les échecs,  Mastermind fait appel à la logique et à la mémoire.
+
+Le principe du jeu est relativement simple. Le joueur 1 crée une combinaison de K pions avec N couleurs. Le joueur 2 doit trouver la combinaison secrète. Pour cela il dispose d'un nombre limité de tentatives. A chaque test le joueur 1 indique le nombre de pions bien placés et le nombre de pions mal placés (c'est-à-dire les poins dont la couleur est présente dans la combinaison, mais dont l'emplacement choisi et mauvais). Si le joueur 2 trouve la combinaison secrète il gagne la manche. Ensuite les deux joueurs intervertissent les rôles.
+
+Voici un exemple de partie :
+
+On a cet ensemble de couleurs à disposition :
+\begin{figure}[h]
+	\centerline{ \includegraphics{couleurs.png} }
+	\caption{Jeux de couleurs, ici on a 6 couleurs donc N = 6}
+	\label{schema}
+\end{figure}	
+
+Ceci est la combinaison à deviner :
+\begin{figure}[h]
+	\centerline{ \includegraphics{combi.png} }
+	\caption{Exemple de combinaison, ici il y a 4 cases donc K = 4}
+	\label{schema}
+\end{figure}
+
+
+Dans l'exemple de partie suivant, le pion noir indique le nombre de pions bien placés et le pion blanc indique le nombre de pions mal placés dans la combinaison proposée :
+\vspace{4cm}
+\begin{figure}[h]
+	\centerline{ \includegraphics[height=10 cm]{mm.png} }
+	\caption{Exemple de résolution de mastermind}
+	\label{schema}
+\end{figure}
+
+
+\subsection{Objectifs du projet}
+\subsubsection{Objectifs de base}
+
+\begin{itemize}
+\item{Réalisations des meilleures stratégies de résolutions du Mastermind.}
+\item{Répondre à la question : "Quel est le nombre minimum de questions à poser dans le pire des cas (4 ou 5 semble-t-il ?)"}
+\end{itemize}
+
+\subsubsection{Objectifs supplémentaires que nous nous sommes fixé}
+
+\begin{itemize}
+\item{Réalisation d'une étude mathématique sur la théorie du Mastermind.}
+\item{Rapport rédigé en LaTeX}
+\item{Pas de source, nous avons utilisé le pseudo code, pour décrire les algorithmes.}
+\item{Utilisation de "vrai" langage de programmation, nous avons retenu le language Java.}
+\item{Rapport compréhensible par un autre étudiant, qui doit être capable, après lecture, d'écrire l'algorithme de résolution.}
+\item{Création d'un interface graphique de mise en concurrence des stratégies}
+\item{Réalisation de jeux de tests et statistiques entre les stratégies}
+\end{itemize}
+
+\section{Etude mathématique sur le Mastermind}
+
+
+Avant d'expliquer les algorithmes mis en {\oe}uvre pour résoudre une combinaison. Nous allons effectuer ici une étude mathématique sur le Mastermind, afin de répondre à la question : "Quel est le nombre minimum de questions à poser dans le pire des cas (4 ou 5 semble-t-il ?)"
+
+Pour répondre à cette question, nous nous sommes aidé de la formule donnée en Travaux dirigé, dans l'exercice sur les pièces. A savoir, que le nombre maximal de tentatives effectuées pour résoudre un problème est égal au $log_{2}$  du nombre de combinaisons possibles, divisé par le $log_{2}$ du nombre d'indications fournis à chaque tentative.
+
+Nous allons donc déterminer le nombre de combinaison et d'indications possibles, en fonction des règles du Mastermind. Les formules seront données dans le cas général, afin de pouvoir les appliquer à tout type de Mastermind.
+
+
+\subsection{Recherche du nombre de combinaisons possible}
+
+En combinatoire, lorsque l'ordre d'apparition de N objets distincts répartis sur K emplacements est pris en compte, le nombre de combinaisons possible s'appelle un Arrangement. \\
+
+Au Mastermind, les N objets distincts correspondent aux boules de couleurs, et les K emplacements correspondent aux cases dans lesquelles on place les boules de couleurs.
+\\
+Aussi lorsque les répétitions d'objets distincts sont autorisées nous avons : \\
+$$nombre\_de\_combinaisons = n^{k}$$
+\\
+\\
+Et lorsque les répétitions d'objets distincts sont interdites nous avons :
+	$$nombre\_de\_combinaisons = A_{n}^{k} = \frac{n!} {(n-k)!}$$
+~
+
+Sachant que selon les règles du Mastermind, les répétitions peuvent être autorisées ou non, le nombre de combinaisons possible est donné par l'algorithme suivant : 
+~
+\begin{lstlisting}[frame=trBL, caption={Algorithme de calcul du nombre de combinaisons},label=table]
+Si les repetitions sont autorisé alors
+
+nombre_de_combinaisons = n^k
+
+Sinon
+
+nombre_de_combinaisons =  n! / (n-k)! 
+
+Finsi
+\end{lstlisting}
+ ~
+
+\subsection{Recherche du nombre d'indications données après chaque tentative}
+
+Nous avons également besoin de déterminer le nombre d'indications fournis après chaque tentative. Ces indications consistent pour le joueur ayant inventé la combinaison à placer autant de boules noires qu'il y a des boules bien placées dans la combinaison tenté, et de mettre autant de boules blanches qu'il y a de boules dont la couleur est présente mais qui n'est pas au bonne emplacement.
+L'ordre des boules noirs et blanches n'a donc aucune importance, et comme il peut y avoir plusieurs boules noires ou boules blanches de présentes les répétitions sont donc autorisées. En combinatoire, la formule correspondant à ses contraintes est :
+
+$$
+R_{n}^{k} =  C_{n+k-1}^{k} 
+$$
+
+Avec n le nombres d'objets distincts, c'est-à-dire 3 puisqu'il y a soit une boule noir, soit une boule blanche, soit aucune boules, et k le nombre de cases de la combinaison, on en déduit la formule :
+
+\begin{eqnarray*}
+nb\_indications & = & R_{3}^k  \\
+& = &  C_{3+k-1}^{k} \\ 
+& = & C_{k+2}^{k} \\
+& = & \frac{(k+2)!}{k! \times (k+2-k)!} \\
+& = & \frac{(k+2)!} {(k! \times 2)}
+\end{eqnarray*}
+
+~
+Remarque : A la formule précédente, il est nécessaire de soustraire 1 indication. Car il y a toujours une indication qu' il n'est pas possible d'avoir. Il s'agit de l'indication donnant k-1 boules noires et 1 boules blanche. Ce qui signifie qu'il y a k-1 boules bien placés et 1 boules mal placé. Or s'il y a k-1 boules bien placées la dernière boule est soit de la mauvaise couleur, soit de la bonne couleur \textbf{et} bien placée, puisqu'elle ne pourrait pas être placée ailleurs comme les autres boules sont bien placées. 
+La formule exacte est donc : 
+$$
+nb\_indications =  \frac{(k+2)!} {(k! \times 2)}  - 1
+$$
+
+\subsection{Calcul du nombre minimum de questions à poser "dans le pire des cas"}
+
+Nous venons de trouver le nombre de combinaisons possibles et d'indications données à chaque tentative. Nous pouvons désormais en déduire le nombre minimum de questions à poser "dans le pire des cas" grâce à la formule de a
+Shanon: 
+$$
+nb\_tentatives\_dans\_le\_pire\_des\_cas =  \lceil  (\frac{ \log_{2}(nb\_combinaison) }{ \log_{2}(nb\_indication)})\rceil
+$$
+
+donc lorsque les répétitions de boules de couleurs sont autorisées :
+
+$$
+nb\_tentatives\_dans\_le\_pire\_des\_cas =  \lceil  ( 
+\frac{ n^{k} } { \frac{k+2)!}{ (k! \times 2) - 1) } })\rceil
+$$
+
+et lorsqu'elles sont interdites :
+$$
+nb\_tentatives\_dans\_le\_pire\_des\_cas = \lceil (
+\frac{ \log_{2}( \frac{n!}{(n-k)!}) }{ \log_{2}( \frac{(k+2)!}{ (k! \times 2)}  - 1)}) \rceil
+$$
+
+
+Effectuons le calcul du nombre de tentatives dans le pire des cas, selon la règle de Mastermind la plus utilisée :
+
+\begin{itemize}
+	\item{8 boules de couleurs (N=8)}
+	\item{4 cases (K=4)}
+	\item{Répétitions autorisée}
+\end{itemize}
+~
+
+Calcul du nombre de combinaisons (sachant que les répétitions de couleurs sont autorisées) :
+
+\begin{eqnarray*} 
+nombre\_de\_combinaisons & = & n^{K} \\
+ & = & 8^{4} \\
+ & = & 4096 \\
+\end{eqnarray*} 
+
+Il y a 4096 combinaisons possible avec ces règles, déterminons le nombre d'indications à chaque tentatives :
+
+Calcul du nombre d'indications : 
+\begin{eqnarray} 
+nb\_indications & = & R_{3}^{k} \nonumber \\
+ & = & \frac{(k+2)!}{(k! \times 2)} -1  \nonumber \\
+ & = & \frac{6! }{ (4! \times 2)} - 1  \nonumber  \\
+& = & 6 \times \frac{5}{2} - 1  \nonumber \\
+ & = & 15 - 1  \nonumber \\
+& = & 14 \nonumber
+\end{eqnarray} 
+
+
+Nous avons donc 14 indications possibles avec ces règles, calculons maintenant le nombre de tentatives dans le pire des cas : 
+\begin{eqnarray} 
+nb\_tentatives\_dans\_le\_pire\_des\_cas & = & \lceil (\frac{ {\log}_{2}(nombre\_de\_combinaisons) }{ {\log}_{2}(nombre\_d'indications) }) \rceil \nonumber \\
+ & = & \lceil (\frac{ {\log}_{2}(4096)}{ {\log}_{2}(14)} ) \rceil  \nonumber \\
+ & = & \lceil (\frac{12 }{ 3.8074} ) \rceil \nonumber  \\
+ & = & \lceil (3.2) \rceil \nonumber \\
+ & = & 4  \nonumber 
+\end{eqnarray} 
+
+Le nombre minimum de questions à poser "dans le pire des cas" est donc 4.
+
+\medskip
+Si vous êtes habitué à résoudre des Mastermind, ce nombre doit, comme pour nous, vous paraître très faible. En effet, comme nous la confirmé Emmanuel SAPIN\footnote{Emmanuel SAPIN est un chercheur en informatique qui a obtenu la 3ième place à un concours d'algorithmique visant à résoudre un Mastermind 13 couleurs, 13 cases.}, il s'agit ici d'un nombre "purement théorique", que les meilleurs stratèges du Mastermind tentent d'approcher.
+
+\medskip
+	Nous avons voulu cependant savoir pourquoi ce nombre est si faible. Et en analysant de plus près le nombre d'indications fournis à chaque tentatives on se rend compte que même si en théorie nous avons $R_{3}^{k}$ indications possibles, en pratique le nombre d'indications est plus faible. 
+	
+Exemple, lorsqu'on tente une combinaison avec que des boules rouges. Il ne peut pas y avoir d'indications comportant de boules "mal placées", puisque si des boules rouges sont présentes dans la combinaison a trouvé, alors elles seront comptées en "bien placées". Le nombre d'indications possibles dans ce cas là est donc égale aux nombre de case soit k, ce qui est bien plus faible que $R_{3}^{k}$. Ce constat explique en partie pourquoi il est si dur d'atteindre un nombre maximum de 4 tentatives dans le pire des cas, pour un Mastermind 8 couleurs, 4 cases.
+
+
+\section{Résolution de Mastermind en Algorithmique classique}
+
+Notre première approche de résolution d'une combinaison, consiste à programmer en algorithmique classique, un code capable de réaliser le même raisonnement que celui d'un humain lors de la recherche d'une combinaison de Mastermind.
+
+
+	Dans cette partie nous verrons comment nous sommes arrivé à cet objectif, en détaillant les critères heuristiques utilisés ainsi que les différentes fonctions d'optimisation implémentés.
+
+\subsection{Modélisation du problème du Mastermind en algorithmique classique}
+
+Le Mastermind fait partie des jeux de réflexions modélisable sous forme d'un arbre de possibilité. Cependant avec les règles habituelles de Mastermind l'arbre des possibilités à une taille beaucoup trop grande pour être exploitable à la main. Afin de nous facilité la recherche de critères heuristiques nous nous sommes donc tourné vers des arbres de possibilités de plus petites tailles grâce à des règles de Mastermind réduite (2 cases, 3 couleurs). Les critères heuristiques définis ici,  sont le fruit de la réflexion sur ces arbres de possibilités.
+
+Le principe général de résolution d'une combinaison consiste à déterminer la position de chaque couleur les unes après les autres jusqu'à ce qu'on ait trouvé la combinaison secrète. On rappelle que l'algorithme doit être capable de résoudre les Masterminds contenant des répétitions de la même couleur. Par conséquent, la première information qu'on doit obtenir est le nombre d'occurrences d'une couleur, la seconde est la position exacte de chaque occurrence dans la combinaison.
+
+Nous en avons donc déduits les deux critères suivants :
+
+\vspace{1cm}
+	- \textbf{Critère 1} : \underline{Trouver le nombre d'occurrences d'une couleur}. Pour cela on remplit la combinaison à tenter de la couleur recherchée. Le nombre de couleurs bien placées fourni en retour moins le nombre de boules que nous avons déjà correctement placé, correspond alors au nombre d'occurrences de la couleur :
+	
+
+\vspace{1cm}
+
+	- \textbf{Critère 2} : \underline{Trouver la position exacte de chaque occurrence de  couleur}. Pour cela ont teste chaque position avec la couleur en cours et on rempli le reste de la combinaison tenté avec la couleur suivante. Lorsque le nombre de couleurs mal placées fourni en retour est égale à 0, on à trouvé la position de la couleur.
+
+~
+
+Détaillons un exemple de résolution d'une combinaison appliquant ces deux critères, en résolvant la combinaison 1 3 2 1 5 :
+
+\begin{enumerate}
+
+\item{On cherche le nombre d'occurrence de la couleur 1 (critère 1) :
+
+	\begin{itemize}
+		\item{Tentative 1 : 1 1 1 1 1}
+		\item{Résultat : bien\_place =  2  mal\_place = 0}
+		\item{$ \rightarrow $ On en déduit q'il y a deux fois la couleur 1 dans la combinaison secrète (critère 1).}
+	\end{itemize}
+}
+
+\item{
+On cherche ensuite à déterminer la place exacte du premier 1.
+Pour cela, on affecte 1 à la première valeur et 2 aux autres valeurs. Dès que le test ne renvoi aucun pion mal placés on a trouvé la position du 1 (critère 2) :
+	\begin{itemize}
+		\item{Tentative 2 : 1 2 2 2 2}
+		\item{Résultat : NbBienPlace = 2   NbMalPlace = 0}
+		\item{$ \rightarrow $  On a aucune couleur mal placé,  par conséquent la couleur 1 est à la bonne position. On peut fixe alors la position du 1 comme sûr.}
+	\end{itemize}
+}
+
+\item{
+On détermine ensuite la position du second 1 de la même manière, sans toucher au premier~1 :
+	\begin{itemize}
+		\item{Tentative 3 : 1 1 2 2 2}
+		\item{Résultat : NbBienPlace = 2  NbMalPlace = 1}
+		\item{$ \rightarrow NbMalPlace > 0 $, la position testée n'est donc pas la bonne.}
+	\end{itemize}
+	
+}
+\item{
+On test la position suivante (critère 2) :
+	\begin{itemize}
+		\item{Tentative 4 : 1 2 1 2 2}
+		\item{Résultat : NbBienPlace = 1  NbMalPlace = 2}
+		\item{$ \rightarrow NbMalPlace > 0$, la position n'est toujours pas la bonne.}
+		\end{itemize}
+}
+\item{
+On test la position suivante (critère 2) :
+	\begin{itemize}
+		\item{Tentative 5 : 1 2 2 1 2}
+		\item{Résultat : NbBienPlace = 3  NbMalPlace = 0}
+		\item{$ \rightarrow NbMalPlace = 0$, ont à trouvé la bonne position.}
+	\end{itemize}
+}
+\item{
+	On détermine de la même manière les occurrences des autres couleurs à la différence près que le nombre de bien placés est égal au nombre de pions bien placés moins le nombre de pions déjà trouvés (critère 1) :
+	\begin{itemize}
+		\item{Tentative 6 : 1 2 2 1 2 }
+		\item{Résultat : bien\_place = 3   mal\_place =0}
+		\item{$ \rightarrow $ Il y a 3-2=1 boule de couleur 2.}
+	\end{itemize}
+	
+}
+\item{
+Recherche de la position de la boule de couleur 2 (critère 2) :
+\begin{itemize}
+		\item{Tentative 7 : 1 2 3 1 3 }
+		\item{Résultat : bien\_place = 3   mal\_place = 3}
+		\item{$ \rightarrow NbMalPlace > 0$, la position n'est pas la bonne (critère 2)}
+\end{itemize}
+}
+\item{
+On continu la recherche de la position :
+\begin{itemize}
+		\item{Tentative 8 : 1 3 2 1 3}
+		\item{Résultat : bien\_place = 4   mal\_place =0}
+		\item{$ \rightarrow NbMalPlace = 0$, ont à trouvé la bonne position.}
+\end{itemize}
+}
+\item{
+On cherche le nombre d'occurrences de la couleur 3 (critère 1) :
+\begin{itemize}
+	\item{Tentative 9 : 1 3 2 1 3}
+	\item{Résultat : bien\_place = 4 mal\_place = 0}
+	\item{$ \rightarrow $ Il y a 4-3=1 boule de couleur 3.}
+\end{itemize}
+
+}
+\item{
+On cherche la position de la boule de couleur 3 (critère 2) :
+	\begin{itemize}
+		\item{Tentative 10 :  1 3 2 1 4}
+		\item{Résultat : bien\_place = 4 mal\_place = 0}
+		\item{$ \rightarrow NbMalPlace = 0$, ont à trouvé la bonne position.}
+	\end{itemize}
+}
+\item{
+On cherche le nombre d'occurrences de la couleur 4 (critère 1) :
+\begin{itemize}
+	\item{Tentative 11 : 1 3 2 1 4}
+	\item{Résultat : bien\_place = 4 mal\_place = 0}
+	\item{$ \rightarrow $ Il y a 4-4=0 boule de couleur 4, on passe à la couleur 5.}
+\end{itemize}
+}
+\item{
+On cherche le nombre d'occurrences de la couleur 5 (critère 1) :
+\begin{itemize}
+	\item{Tentative 12 : 1 3 2 1 5}
+	\item{Résultat : bien\_place = 5 mal\_place = 0}
+	\item{$ \rightarrow $ Il y a 5-4=1 boule de couleur 5, ET bien\_place = 5. 
+	
+	La combinaison à été trouvées.}
+\end{itemize}
+}
+
+\end{enumerate}
+
+
+
+Nous venons de voir qu'en implémentant seulement les deux critères précédents, nous pouvons écrire un algorithme capable de résoudre une combinaison. C'est d'ailleurs ce que nous avons fait avec les stratégies 1 et 2.
+
+~
+
+Cependant on remarque que la recherche de la position de chaque occurrence de couleur demande beaucoup de tentatives. Afin de discriminer encore un peu plus les possibilités nous nous sommes posés la question suivante : Pouvons-nous continuer à obtenir de nouvelles informations sur la combinaison lors de la recherche de la position d'une couleur ?
+
+Après une analyse plus approfondie du problème, nous avons pu trouver des nouveaux critères heuristiques, tournant justement la longue recherche de position d'une couleur à notre avantage. Nous pouvons donc répondre par l'affirmative à la question précédente. 
+
+Explications :
+
+~
+
+	- \textbf{Critère 3} : Lors de la recherche de la position exacte de la couleur courante nous complétons les cases de la combinaison non encore déterminée avec la couleur suivante (Critère 2). \underline{Il est alors possible de connaître le nombre d'occurrences de la couleur suivante}, sans avoir besoin de la tester lors de la prochaine itération de la boucle. En effet, en analysant le nombre de boules bien placées et le nombre de boules mal placé on peut directement obtenir cette information par la formule : 
+
+$$
+Nombre\_de\_ boules\_de\_la\_couleur\_suivante = (NbBienPlace+NbMalPlace) - NbDejaTrouve - 1.
+$$
+
+Au nombre de boules bien placées et mal placées, on soustrait le nombre de boules de couleurs dont ont à déjà déterminé la position (NbDejaTrouve) puis on soustrait 1 qui correspond à la couleur courante dont on sait qu'elle appartient à la combinaison. Le nombre résultant est donc bien le nombre d'occurrence de la couleur suivante.
+
+Cette formule nous permet d'éviter les tentatives permettant de déterminer le nombre d'occurrences (Critère 1). Puisque quand la couleur suivante deviendra la couleur courante, nous connaîtrons déjà à l'avance son nombre d'occurrences.
+
+~
+
+	- \textbf{Critère 4} : Puisqu'avec le Critère 3 nous connaissons le nombre d'occurrences de la couleur prochainement testé, \underline{nous pouvons savoir si cette couleur est présente ou non}. Il suffit en effet de regarder si son nombre d'occurrence vaut zéro. Si c'est le cas, au lieu de continuer à compléter la combinaison avec cette couleur, on complète la combinaison avec la couleur supérieure.
+
+~
+
+L'implémentation de ces quatre critères dans la stratégie 3, nous permet d'avoir une stratégie de résolution aussi intelligente que le raisonnement humain. Les nombres de tentatives moyens et dans le pire des cas ainsi que le temps d'exécution ont alors été grandement diminués, comme nous le verrons dans la partie "Comparaisons des performances des stratégies implémentées".
+
+
+\subsection{Schéma d'algorithme des implémentations}
+
+Nous avons réalisé trois stratégies implémentant les critères précédents. Les deux premières implémentent les critères 1 et 2 mais avec une approche différente au niveau algorithmique, et la troisième implémente tous les critères heuristiques.
+
+\subsubsection{Stratégies implémentant les critères 1 et 2}
+
+Les stratégies expliquées dans cette partie implémentent les deux critères minimums pour résoudre une combinaison de Mastermind. Elles nous ont permis de comprendre les principales difficultés d'implémentations. Nous avons ensuite gardé le meilleur de ces deux stratégies pour réaliser la stratégie 3 implémentant les deux autres critères.
+
+Le schéma d'algorithme de ces deux stratégies est le suivant :
+
+\begin{lstlisting}[frame=trBL, caption={Pseudo-code des stratégies 1 et 2},label=Stratégie 1 et 2]
+Initialiser la couleurCourante à 1
+
+Tant que le Mastermind n'est pas résolu Faire
+
+  - [Critère 1] Générer une tentative cherchant la présence le nombre d'occurence de la couleurCourante
+  
+  - Soumettre la tentative au programme qui à générer la combinaison pour récupérer le nombre de boule bien placé et mal placé
+  
+  - [Critère 1] Déterminer le nombre d'occurence de la couleurCourante par la formule : nbOccurence = nbBienPlace - nbBouleDejaBienPlace
+  
+  - Si la couleurCourante est présente dans la combinaison
+     
+        - Pour chaque occurrence de la couleur courante
+        
+           -  [Critère 2] Tant que le nombre de boule mal placé est différent de 0
+           
+              - [Critère 2] Générer une tentative cherchant la position exacte de la couleurCourante 
+					
+           - Fin Tant que
+           
+        - Fin Pour
+     	
+  - Fin Si
+  couleurCourante <- couleurCourante + 1
+  
+Fin Tant que
+			
+\end{lstlisting}
+
+
+~
+
+\textbf{Stratégie 2 : Deuxième implémentation des critères 1 et 2}
+
+~
+
+L'approche au niveau algorithmique de cette stratégie diffère, avec la stratégie 1, notamment avec un système de drapeau permettant de savoir si la position d'une couleur à été trouvée. Ce qui permet à cette stratégie d'obtenir de meilleurs résultats. Cependant le schéma d'algorithme de cette stratégie est le même que pour la stratégie 1, afin d'appréhender leur différence nous vous invitons à consulter l'annexe 2 détaillant le pseudo-code détaillé des stratégies implémentés.
+
+\subsubsection{Stratégie implémentant  les quatre critères heuristiques}
+ 
+Cette partie est consacrée à la troisième stratégie que nous avons programmé.
+Celle-ci implémente tous les critères heuristiques définis précédement et cela par un algorithme le plus optimisé en nombre de lignes et en temps d'exécution, comme nous le verrons plus tard dans la partie consacrée aux tests. 
+Les tentatives qu'elle propose pour résoudre une combinaison sont équivalentes aux tentatives tentées par un humain. Il s'agit là d'une des meilleures stratégies possibles en algorithmique classique.
+
+Le schéma d'algorithme de cette stratégie est le suivant :
+
+
+\begin{lstlisting}[frame=trBL, caption={Pseudo-code de la stratégie 3},label=Stratégie 3]
+Initialiser la couleurCourante à 1
+
+Tant que le Mastermind n'est pas résolu Faire
+
+  - [Critère 1] Générer une tentative cherchant la présence le nombre d'occurence de la couleurCourante
+  
+  - Soumettre la tentative au programme qui à générer la combinaison pour récupérer le nombre de boule bien placé et mal placé
+  
+  - [Critère 1] Déterminer le nombre d'occurence de la couleurCourante par la formule : nbOccurence = nbBienPlace - nbBouleDejaBienPlace
+  
+  - Si la couleurCourante est présente dans la combinaison
+	
+     - Faire
+     
+        - Pour chaque occurrence de la couleur courante
+        
+           -  [Critère 2] Tant que le nombre de boule mal placé est différent de 0
+           
+              - [Critère 2] Générer une tentative cherchant la position exacte de la couleurCourante 
+					
+              - [Critère 3] Determiner le nombre d'occurence de la couleur suivante par la formule nbOccurenceCouleurSuivante  = (nbBienPlace+nbMalPlace) - nbTrouve - 1
+              				
+              - [Critère 4] Si la couleur suivante n'est pas dans la combinaison
+					couleurSuivante = couleurSuivante + 1
+					
+           - Fin Tant que
+           
+        - Fin Pour
+        
+     - Tant que la couleur suivante est présente
+     	
+  - Fin Si
+    couleurCourante <- couleurCourante + 1
+Fin Tant que
+			
+\end{lstlisting}
+
+~
+
+Sur un schéma d'algorithme l'implémentation de ces deux nouveaux critères peut paraître simple. Cependant l'algorithmique classique regorge de subtilités dont il a fallu faire face. Pour information l'implémentation en Java de cette algorithme tient en plus de 200 lignes de code (environ 160 en pseudo-code détaillées comme vous pourrez le constater dans l'annexe 2).
+
+
+Comme nous le verrons dans la partie consacrée aux tests, l'apport des critères 3 et 4 augmentent grandement l'efficacité de l'algorithme. Et les tentatives qu'il propose sont similaires à ce qu'un être humain propose. 
+Cependant on s'aper\c cois que même l'apport des critères 3 et 4 ne permettent pas d'exploiter aux maximum les informations fournies après chaque tentative. En fait ce constat est intrinsèque à l'algorithmique classique, qui est toujours dans l'attente de la satisfaction d'une contrainte avant de passer à une autre. D'où la question suivante : Est-il possible d'écrire un programme capable à chaque instant de tenir compte de toutes les informations obtenues après chaque tentative ? 
+
+
+\section{Modélisation du problème du Mastermind en Programmation Par Contrainte (PPC)}
+
+Nous allons maintenant voir une nouvelle approche de résolution d'une combinaison de Mastermind. Cette méthode, appelée "Programmation par contrainte", consiste à définir formellement un problème en définissant ses variables et leurs domaines ainsi qu'un ensemble de contraintes. 
+
+Ce type de programmation permet de tenir compte de toutes les informations obtenues après chaque tentative. Ce rapport se devant être compréhensible pour tout étudiant, nous avons réalisé un rappel définissant plus en détail ce qu'est la programmation par contrainte dans l'annexe 1, que nous vous invitons à consulter si vous découvrez pour la première fois cette nouvelle méthode de programmation.
+
+
+\subsection{Modélisation du problème du Mastermind}
+
+\subsubsection{Description formel d'une combinaison}
+
+Reprenons les règles du Mastermind afin de les retranscrire en un problème de satisfaction de contrainte (CSP).
+
+Le jeu du Mastermind consiste à déterminer un code secret composé de N valeurs (chaque valeur représentant une couleur) réparties dans K cases.
+Le code secret est donc défini par l'ensemble ordonné de variables $ X=\{X1, X2, X3, ..., Xk\}$. Le domaine quant à lui est similaire pour chaque variable : $ D=\{1, ..., N\}$
+
+Le but est de trouver le code en proposant des combinaisons successives, basées sur un retour d'information fourni après chaque tentative par l'inventeur de la combinaison. 
+
+L'information fournie en retour est le nombre de bons chiffres à la bonne position (NbBienPlace) dans le code (sans dire quelles sont les bonnes positions) et le nombre de bons chiffres situés à des mauvaises positions (NbMalPlace) dans le code. 
+
+
+Les variables définissant le code secret recherché devront être représentées sous forme d'un tableau combi[] de taille K, composé de variables entières, dont les domaines seront restreints à [1 ... N].
+
+La méthodologie de la programmation par contrainte consiste à définir un domaine de validité pour chaque variable dans le système, ainsi que des contraintes relatives entre les variables. Par la suite, il convient de fixer la valeur d'une première variable, propager les nouvelles contraintes et fixer la variable suivante, jusqu'à ce que toutes les variables aient des valeurs attribuées.
+
+Si une contradiction entre deux contraintes est détectée (c'est à dire, si un domaine d'une variable devient "vide"), un "\textit{\textbf{backtrack}}" (reprise) est effectué, afin d'essayer d'autres valeurs.
+
+Il faut imposer de plus en plus de contraintes et restreindre ainsi successivement les domaines de chaque variable jusqu'à ce qu'il ne reste qu'une seule valeur possible. C'est à ce moment qu'on aura trouvé la bonne solution.
+
+De plus, un autre tableau de variables entières, qu'on nommera Occ[] de taille N, sera à définir. Ce dernier servira à déterminer le nombre d'occurrences de chaque chiffre. A priori les domaines de ces variables vont de [0 ... K], car un chiffre peut exister entre "aucune fois" et "toutes les positions sont prises par le même chiffre".
+
+Listons les contraintes retenues pour la résolution d'une combinaison :
+\begin{itemize}
+\item{Contrainte 1 : La première contrainte imposée est donc que le nombre d'occurrences d'un chiffre i doit être inclus dans le domaine Occ[i].}
+\item{Contrainte 2 :  La somme des minimas des occurrences de toutes les couleurs doit être égale à la somme du nombre de chiffres bien placé et du nombre de chiffres mal placés.}
+\item{Contrainte 3 : En comparant chaque élément d'une tentative T avec la tentative précédente (T-1), on doit obtenir le même nombre de correspondances :
+$$
+NbBienPlace(T-1 \Leftrightarrow X) = NbBienPlace(T-1 \Leftrightarrow T)     
+$$
+      Explication : NbBienPlace indique le nombre de bons chiffres aux bonnes positions, lorsque la tentative T-1 est comparée à la combinaison recherchée. Forcément, pour être la bonne combinaison, une tentative T doit avoir le même nombre NbBienPlace, si l'on compare à T-1.
+}
+\end{itemize}
+
+\subsubsection{Schéma de l'algorithme}
+
+L'algorithme de propagation de contrainte du problème du Mastermind devra être implémenté comme suit :
+
+\begin{enumerate}
+\item{Créer les tableaux combiTente de taille K et Occ de taille N, restreindre les domaines de leurs variables à [1 ... N] et [0 ... K]}
+\item{Imposer la contrainte (C1)}
+\item{Tant que NbBienPlace < K}
+
+	\begin{enumerate}
+         \item{Fixer une valeur quelconque pour chacune des variables du tableau combiTente[] (en respectant les domaines et les contraintes)}
+         \item{Proposer la tentative obtenus et récupérer NbBienPlace et NbMalPlace}
+         \item{Imposer les nouvelles contraintes (C2) et (C3)}
+	\end{enumerate}	
+	
+	\item{La bonne séquence de chiffres a été trouvée}
+\end{enumerate}
+
+Le langage le plus adapté pour implémenter un problème modélisé en programation par contrainte est le langage Prolog. Comme il fera partie de notre enseignement au lors du semestre prochain. Nous espérons à ce moment là, pouvoir implémenter l'algorithmique donnée plus haut.
+
+Enfin, nous tenons à remercier Sébastian Kanzow docteur en informatique à l'Université de Paris 12, pour ses  précisions notamment sur les contraintes à retenir. 
+
+
+\section{Comparaisons des performances des stratégies implémentées}
+
+\subsection{Protocole de test}
+	
+	Afin de comparer les stratégies implémentées, nous avons réalisée un ensemble de tests. Dont voici le protocole :
+
+
+
+Machine de test :
+\begin{itemize} 
+		\item{Processeur : 3,5ghz (AMD Athlon core Venice)}
+		\item{Mémoire : 2 Giga de RAM (Corsaire)}
+		\item{Disques durs : 2 x 250Go, 7200tr/min (Maxtor diamond max 10)}
+\end{itemize}
+
+~	
+		
+Nombres de mastermind résolu pour chaque test : 1 000 000
+
+~
+
+Chaque stratégie à été testée avec cinq règles différentes, afin de voir si une stratégie est meilleure que les autres en fonction des règles de Mastermind.
+
+Les cinq règles testées sont les suivantes :
+\vspace{0.5cm}
+\begin{enumerate}
+\item{
+Règles 1 : 
+\begin{itemize}
+	\item{6 couleurs}
+	\item{4 cases}
+	\item{Répétitions autorisées}
+\end{itemize}
+}
+\vspace{0.5cm}
+\item{
+Règles 2 :
+\begin{itemize}
+	\item{8 couleurs}
+	\item{4 cases}
+	\item{Répétitions autorisées}
+\end{itemize}
+}
+\vspace{0.5cm}
+\item{
+Règles 3 :
+\begin{itemize}
+	\item{8 couleurs}
+	\item{4 cases}
+	\item{Pas de répétition de couleur}
+\end{itemize}
+}
+
+\vspace{0.5cm}
+\item{
+Règles 4 :
+\begin{itemize}
+	\item{20 couleurs}
+	\item{4 cases}
+	\item{Répétitions autorisées}
+\end{itemize}
+}
+\vspace{0.5cm}
+\item{
+Règles 5 :
+\begin{itemize}
+	\item{4 couleurs}
+	\item{6 cases}
+	\item{Répétitions autorisées}
+\end{itemize}
+}
+\end{enumerate}
+
+\subsection{Graphique statistiques}
+\subsubsection{Nombre de tentatives moyen}
+ 
+ Dans ce premier graphique nous pouvons voir le nombre moyen de tentatives réalisées par chaque stratégie pour résoudre une combinaison.
+ 
+\begin{figure}[h]
+	\centerline{ \includegraphics[height=12 cm]{tentatives-moyen.png} }
+	\caption{Nombre de tentatives moyen selon les trois stratégies et selon différentes règles de Mastermind}
+	\label{schema}
+\end{figure}	
+
+Premièrement on peut remarquer que la stratégie 2 est légèrement meilleure que la stratégie~1, mais qu'en règle générale les deux stratégies obtiennent des résultats très similaires. Ce constat s'explique facilement puisque les stratégies 1 et 2 implémentent toutes les deux les mêmes critères heuristiques. 
+Cependant lorsque que la combinaison à rechercher contient plus de cases que de couleurs c'est la stratégie 1 qui réalise moins de tentatives en moyenne. Nous expliquerons pourquoi nous faisons ce constat, un peu plus loin.
+
+Le stratégie 3 quant à elle obtient d'excellents résultats avec un gain moyen de 30\% par rapport aux deux premières stratégies. On peut donc affirmer dès maintenant que l'implémentation des critères 3 et 4 nous a permis d'améliorer de manière importante l'heuristique de notre algorithme.
+
+\newpage
+
+\subsubsection{Nombre de tentatives maximum}
+
+Ce second graphique Fig.[\ref{tentativesmax}] met en avant le nombre de tentatives effectuées dans le pire des cas, pour résoudre une combinaison selon les trois stratégies.
+
+\begin{figure}[h]
+	\centerline{ \includegraphics[height=12 cm]{tentatives-max.png} }
+	\caption{Nombre de tentatives maximum selon les trois stratégies et selon différentes règles de Mastermind}
+	\label{tentativesmax}
+\end{figure}	
+
+Ce nombre est très parlant pour arriver à juger l'intelligence d'une stratégie. La aussi on obtient le classement suivant :
+\begin{enumerate}
+	\item{Stratégie 3}
+	\item{Stratégie 2}
+	\item{Stratégie 1}
+\end{enumerate}
+
+\subsubsection{Temps d'execution}
+
+Examinons maintenant les temps d'exécution. Ces temps sont exprimés en milisecondes, plus le temps d'exécution est faible, meilleure est la stratégie. 
+\quad \ \
+\vspace{2cm}
+
+\begin{figure}[h]
+	\centerline{ \includegraphics[height=12 cm]{temps.png} }
+	\caption{Temps d'execution total en milisecondes pour résoudre 1 000 000 de combinaisons, selon les trois stratégies et selon différentes règles de Mastermind}
+	\label{schema}
+\end{figure}	
+
+On remarque là encore que la stratégie 3 obtient de très bons résultats avec un gain moyen de 35~\% de rapidité  par rapport aux stratégies 1 et 2, ce qui est logique puisqu'elle est capable de résoudre une combinaison en moins de tentatives que ces deux dernières.
+
+
+On peut également remarquer que nos impressions sur le nombre de tentatives moyen de la stratégie 2 pour résoudre les Mastermind 4 couleurs, 6 cases (Règles 5) sont confirmées. Cette stratégie obtient de moins bons résultats que la Stratégie 1 pourtant moins efficace avec toutes les autres règles. On en conclu que la recherche de position (Critère 2) de la stratégie 2 est moins bien réalisé que dans la stratégie 1, car la règle 5 nécessite plus souvent que les autres, la recherche de la position d'une couleur.
+
+
+\subsection{Interface de mise en concurrences des stratégies}
+
+Afin de facilité la démonstration de nos algorithmes le jour de la démonstration, nous avons programmer une interface graphique (Fig. [\ref{IHM}]). Cette interface nous a également permis de réaliser nos différents testes, et comme nous avons encapsulé chaque stratégie dans un processus (Thread) différent, nous pouvons lancer les trois stratégies en parallèle et voir ainsi en temps réelle celle qui résout le lot de combinaisons le plus rapidement possible. Nous pouvons ainsi mettre en avant de manière plus conviviale les différences entre les stratégies.
+
+\begin{figure}[h]
+	\centerline{ \includegraphics[height=12 cm]{IHM.png} }
+	\caption{Interface graphique de mise en concurrence des stratégies}
+	\label{IHM}
+\end{figure}	
+
+
+\section{Conclusion}
+
+Même si au premier abord, travailler sur l'intelligence artificielle d'un jeux de réflexion paraît simple, en réalité il n'en est rien. Comme vous pourrez le constater dans l'annexe 2 consacré au pseudo-code des algorithmes. La moindre stratégie de résolution, demande plus d'une centaine de lignes de pseudo-code. Il est donc évident qu'une modélisation et une analyse précise du problème doivent être réalisées avant de commencer les implémentations. C'est pourquoi nous avons effectué en premier lieu une investigation mathématique sur le mastermind, ainsi qu'une recherche de critères nous permettant d'élaguer le plus rapidement possible l'arbre des possibilités. Nous avons également pu constater que la programmation en algorithmique classique, pour ce genre de problème, montre rapidement ses limites. Tandis que l'approche par propagation de contrainte, elle, ne souffre pas de toutes ces difficultés d'implémentation et elle permet en plus de tenir compte à chaque instant de toutes les informations dont elle dispose, contrairement à l'algorithmique classique. C'est d'ailleurs pourquoi, cette approche est considérée comme la plus performante pour résoudre un grand nombre de jeux de réflexions, mais également de problèmes plus concret du monde professionnel. S'orientant vers un Master Intelligence artificielle et base de donnée, nous espérons que nous continuerons à approfondir ce type de programmation très prometteur.
+
+	
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		 BIBLIOGRAPHIE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Bibliographie}
+
+Ce rapport a été r\'ealis\'e \`a partir des ouvrages documents suivants : 
+
+\begin{thebibliography}{9}
+
+\bibitem[1] {cle1} Cormen, Leiserson, Rivest. DUNOD - 2002 - Livre : Introduction à l'algorithmique
+
+\bibitem[2] {cle2} Jacques Courtin, Irène Kowarski  - DUNOD - 1994 - Livre : Initiation à l'algorithmique et aux structures de données
+
+\bibitem[3] {cle3} Christine Solnon (1997) \url{http://bat710.univ-lyon1.fr/~csolnon/contraintes.html}
+
+
+\bibitem[4] {cle4} Sébastien Dorane - \url{http://sjrd.developpez.com/algorithmique/Didier Deleglise}
+
+\bibitem[5] {cle5} Code Source France : \url{http://www.cppfrance.com/codes/source\_37316.aspx}
+
+\bibitem[6] {cle6} Concours Mastermind organiser entre scientifiques - Université Paris V René Descarte - \url{http://www.antsearch.univ-tours.fr/ea/default.asp?FCT=DP&ID\_PAGE=24 }
+
+
+
+\end{thebibliography}
+
+\end{document}  

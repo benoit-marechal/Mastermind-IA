@@ -1,0 +1,490 @@
+% Rapport : IA - Mastermind
+% Décembre 2006
+% Module : Algorithmique & complexité
+% Auteur :  Benoit Maréchal & Marc Rastoix
+%
+% - Arbres pas possible de le dessiner
+% - Tags chabrier
+% - CSP correct
+% - Algo pseudo-code à refaire plus en francais
+% - Bibliographie
+% - Comment s'ecri artificiel ?
+% Après critère 1 et 2  dire :
+%    la recherche du critere 2 est tres longue pouvons nous
+% en profiter pour continué à obtenir plusieur renseignemets pedant la recherche ? Oui critere 3 et 4 ...
+%
+% Apres critère 3 et 4, Des qu'on trouve une couleur suivante
+% qui est presente, on arrete de chercher de l'information pedant le critere 2
+% C'est une contrainte typique de l'algortimithme classique d'ou la question :
+% Est il possible d'ecrire un programme capable de tenir compte de 
+% toutes les informations obtenu, à chaque tentatives. Oui avec la programmation par contrainte, les résultats sont bluffant.
+% 
+%
+%
+
+\documentclass[12pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{epstopdf}
+
+                               % Activate to display a given date or no date
+
+
+\usepackage{times}
+\usepackage[frenchb]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{amssymb,latexsym,amsmath,graphicx,pstricks,pst-node}
+%\usepackage{layout}
+\setlength{\textheight}{23cm}
+\setlength{\textwidth}{16.6cm}
+\setlength{\hoffset}{0cm}
+\setlength{\voffset}{-2cm}
+\setlength{\marginparwidth}{0cm}
+\setlength{\marginparsep}{0cm}
+%\setlength{\headheight}{0.0in}
+%\setlength{\headsep}{0.0in}
+\setlength{\oddsidemargin}{0cm}
+%\setlength{\parindent}{0pt}
+\usepackage{listings}						%Pour mettre en forme tous ce qui est 'code source'
+
+\sloppy  									%??
+
+\bibliographystyle{plain}
+
+
+
+\begin{document}
+
+\includegraphics[height=2 cm]{logo_ub.pdf}
+\hspace{9cm}
+\includegraphics[height=2 cm]{logo_ufr.pdf}\\
+
+\vspace{3.5cm}
+
+\begin{center}
+\large{M1 Informatique - Module Algorithmique et complexité}\\
+\quad \\
+\vspace{2cm}
+\huge{Intelligence Artificiel pour le Mastermind} 
+
+\vspace{2cm}
+
+\huge{Annexe 2 - Pseudo-code détaillé des Algorithmes} 
+
+\quad \\
+\vspace{1.5cm}
+\large{Benoît MARECHAL et Marc RASTOIX}\\
+\vspace{0.5cm}
+\large{Encadrant : Jean-Jacques CHABRIER}
+\end{center}
+
+
+\titlepage
+
+\newpage
+\tableofcontents
+\newpage
+
+
+%Les blocs de code
+\lstset{numbers=left, numberstyle=\small,breaklines=true, stepnumber=1, numbersep=10pt, frameround=fttt, basicstyle=\small}
+
+\section{Stratégie 1 : Implémentation des critères 1 et 2}
+
+\begin{lstlisting}[frame=trBL, caption={Pseudo-code détaillé de la stratégie 1},label=Stratégie 1]
+
+On prend en paramètre de la stratégie :
+	- un tableau contenant la combinaison à trouver
+	- Le nombre de couleurs
+	- Le nombre de cases
+  Et on renvoi le nombre de tentatives effectuées
+
+	
+Fonction  (combi, n, k) --> Strategie1 --> NbTentatives 
+
+// Initialisations des variables
+
+coul <- 1 // Couleur courante à testé, on commence avec la 1ière couleur
+     
+combiTente <- initialiser à la taille k // Tableau contenant la combinaison tentées par l'ia
+
+combiTrouve <- initialiser à la taille k // Tableau contenant les couleurs trouvées 
+
+nbBienPlace <- 0 // Nb de boules bien placé ds la combi tente
+nbMalPlace <- 0 // Nb de boules mal placé ds la combi tente
+nbTrouve <- 0 // Nb de boules de couleurs dont ont a trouvé la position
+nbBoule <- 0 // Nb d'occurence de la couleur courante
+nbTentative <- 0 // Nb de tentatives total pour résoudre la combinaison
+pos <- 0 // Position courante testé
+        
+
+// Boucle générant les tentatives jusqu'à résolution de la combinaison
+   
+Tant que nbBienPlace < k Faire
+
+// On crée la nouvelle combinaison à tenté, qui 
+// determine la  presence ou non d'une couleur. 
+// Tout en tenant compte des  positions des 
+// boules de couleurs deja trouvées. 
+
+	Pour i <- 0 jusqu'à k-1 Faire
+        		Si combiTrouve[i] = 0 Alors
+                    combiTente[i] <- coul
+               	Sinon
+                    combiTente[i] <- combiTrouve[i]
+	FinPour
+            
+            
+// On détermine le nombre de bien placés et mal placés
+nbBienPlace <- appeler Fonction nbBienPlace(combi, combiTente, k)
+nbMalPlace <-  appeler Fonction nbCommuns(combi, combiTente, k) - appeler Fonction nbBienPlace(combi, combiTente, k)
+            
+// On incrémente le nombre de tentatives
+            nbTentative <- nbTentative + 1
+
+// On détermine le nombre d'occurences de la couleur courante
+            nbBoules <- nbBienPlace - nbTrouve
+            
+// On vérifie que la couleur courante est présente
+	Si nbBoules >= 1 ET coul <= (n + 1) Faire
+                
+	Pour x <- 1 jusqu'à x = nbBoules Faire
+// On met nbMalPlace à un nombre différent de 0
+		nbMalPlace <- 1
+                    
+// Indice de la position testé pour trouver l'emplacement de
+// la couleur coul. On ne test pas une position qui est déjà 
+// prise par une couleur dont l'emplacement est connu, donc
+//  on crée une boucle qui cherche une position possible.
+
+                    pos <- 0;
+
+// Tant qu'on à pas trouver la bonne position
+		Tant que nbMalPlace != 0 Faire
+// On détermine une position non encore trouvée            
+			Tant que (pos < k) ET (combiTrouve[pos] != 0)
+				pos <- pos + 1
+
+// On crée la nouvelle combinaison à tenté, qui cherche la 
+// position exacte de la boule de couleur en cour. Tout en 
+// tenant compte des positions des boules de couleurs deja 
+// trouvées
+
+		Pour de  i = 0 jusqu'à k-1 Faire
+// Si la case courante, n'est pas une case dont on connais la couleur
+			Si (combiTrouve[i] == 0) Alors
+// Si la case n'est pas la case  testé, on met la boule de
+// couleur supérieur
+				Si (i != pos) Alors
+                                    	combiTente[i] = coul + 1;
+				Sinon
+                                    	combiTente[i] <- coul; 
+				FinSi
+			Sinon
+			   	combiTente[i] <- combiTrouve[i];
+			FinSi
+                        
+                        
+// Calcul du nombre de boule mal placé
+	nbMalPlace <- nbCommuns(combi,combiTente,k) - nbBienPlace
+
+// Incrémentation du nombre de tentatives
+		nbTentative <- NbTentative + 1
+                        
+// On se prépare à tester la position suivante
+		pos <- pos + 1
+                        
+                    FinPour
+                    
+// A la sortie de la boucle, on a la position de 
+// la boule de couleur -> pos - 1
+// On ajoute donc cette boule à la combinaison contenant les
+// boules Trouvées
+                    combiTrouve[pos - 1] <- coul
+                    
+                    // on incrémente le nombre de boule trouvées
+                    nbTrouve <- nbTrouve + 1
+                FinPour
+            FinPour
+            coul<- coul + 1
+        FinTantQue
+        return nbTentative;
+
+End Fonction
+\end{lstlisting}
+
+
+\section{Stratégie 2 : Implémentation des critères 1 et 2}
+
+\begin{lstlisting}[frame=trBL, caption={Pseudo-code détaillé de la stratégie 2},label=Stratégie 2]
+On prend en paramètre de la stratégie :
+- un tableau contenant la combinaison à trouver,
+- le nombre de couleurs,
+- le nombre de case.
+- un booléen pour savoir si les répétitions sont autorisées ou non
+
+Et on renvoie le nombre de tentatives effectuées.
+Fonction(combi,n,k,repetition) --> Strategie 2 --> NbTentatives
+
+// Initialisation des variables
+
+bienplace <- 0 // Nombre de pions bien placés
+malplace <- 0 // Nombre de pions mal placés
+nbtentative <- 0 // Nombre de combinaisons tentées
+temp <- 1
+drap <- 1
+nbi <- 1 // Nombre d'occurrence restant à placer de la couleur i en cours
+nombredejatrouve <- 0 // Nombre de boules qu'on a déjà reussi à placer
+combitemp <- initialisé à la taille k et remplit de -1
+combitente <- initialisé à la taille k et remplit de -1 // Combinaison proposée au programme
+combitrouve <- initialisé à la taille k et remplit de -1 // Combinaison finale
+
+
+Pour chaque couleur identifiée par i de 1 à n
+// Si la solution n'est pas encore trouvée
+	Si bienplace != k
+// On affecte tous les pions pas encore trouves a la couleur courante i
+// Et on parcourt combitrouve avec la variable j
+
+	Si combitrouve[j] = -1 Alors
+		combitente[j] <- i
+		
+// On cherche le nombre de pions biens et mals places
+	bienplace <- appeler fonction nbBienPlace(combi, combitente, k)
+	malplace <- appeler fonction nbCommuns(combi, combitente, k) - appeler fonction nbBienPlace(combi, combitente, k)
+	
+            	// Cela fait une tentative de plus
+		nbtentative <- nbtentative + 1
+		
+                   //Nombre d'occurence de la couleur en i en cours
+		nbi=bienplace-nombredejatrouve;
+		
+// Tant que tous les pions de la couleur en cours i ne 
+// sont pas bien placés
+		Tant que nbi>0
+			temp <- 1
+			drap <- 1 // le drapeau est baissé
+// On recopie combitrouve dans combitemp
+			combitemp[l]=combitrouve[l];
+// Tant que le pion courant de couleur courante i 
+// est mal placé
+			Faire
+// Si on a déjà teste une position non valable
+				Si temp!=-1Alors
+// On passe à la couleur suivante pour le pion temp
+					combitente[temp] <- i+1
+                                               		combitemp[temp] <- -1
+// On baisse le drapeau
+					drap=-1;
+				FinSi
+		Pour j allant de (temp+1) à k exclu
+// Si le pion courant a deja ete trouve
+			Si combitrouve[j] != -1 Alors
+//On le copie dans la combinaison a la bonne position
+				combitente[j] <- combitrouve[j];
+			Sinon
+//Sinon si le drapeau n'est pas mis et donc que la couleur n'a pas deja ete affectee
+     				Si drap == -1 Alors
+//On tente la couleur courante
+					combitente[j] <- i
+					combitemp[j] <- i
+					temp <- j
+//On lève le drapeau
+					drap <- 0
+Sinon
+// Sinon on passe à la couleur suivante pour le pion courant
+					combitente[j] <- i+1;
+				FinSi
+			FinSi
+		FinPour
+//On cherche le nombre de pions biens et mals places
+bienplace <- appeler fonction nbBienPlace(combi, combitemp, k)
+malplace <- appeler fonction nbCommuns(combi, combitemp, k) - appeler fonction nbBienPlace(combi, combitemp, k)
+
+// Cela fait une tentative de plus
+nbtentative <- nbtentative + 1
+			Si malplace!=0
+// On recopie combitemp dans combitrouve
+				combitrouve[] <- combitemp[]
+// Un pion de plus trouve
+			nombredejatrouve <- nombredejatrouve
+// Un pion de moins de couleur i a placer
+			nbi <- nbi + 1
+		FinTantQue
+	FinSi
+	//on retourne le nombre de tentatives
+            retourne nbtentative
+FinPour
+\end{lstlisting}
+
+\section{Stratégie 3 : Implémentation des critères 1, 2, 3 et 4}
+
+\begin{lstlisting}[frame=trBL, caption={Pseudo-code détaillé de la stratégie 3},label=Stratégie 3]
+
+// On prend en paramètre de la stratégie :
+// - un tableau contenant la combinaison à trouver
+// - le nombre de couleurs
+// - le nombre de case
+// - un booléen pour savoir si les répétitions sont autorisées ou non
+// Et on renvoie le nombre de tentatives effectuées.
+
+
+Fonction(combi,n,k,repetition) --> Strategie 3 --> NbTentatives
+
+// Initialisations
+
+coul <- 1; // Couleur testé, on commence avec la 1ier couleur : 1
+combiTente <- initialisé à la taille k // Tableau contenant la combinaison
+// tenté par l'ia
+combiTrouve <-initialisé à la taille k // Tableau contenant les couleurs
+        // trouvées
+nbBienPlace <- 0 // Indique le nombre de boules bien placées
+nbMalPlace <- 0 // Indique le nombre de boule à la mauvaise position
+nbTrouve <- 0 // Nombre de boules de couleurs dont ont a trouvé la
+        // position
+nbTentative <- 0
+pos <- 0
+        
+coulSuivante <- 1 // Contient la couleur suivante servant à remplir
+        // la combinaison lorsqu'on cherche la position de la couleur courante
+        
+nbBoulesSuivante <- 0
+        
+
+// Boucle générant les tentatives jusqu'à la résolution du MM
+        
+// Tant que le combinaison n'est pas trouvée
+Tant que (nbBienPlace(combi, combiTente, k) < k )  Faire
+            
+// On place la couleur suivante dans la couleur courante
+	coul <- coulSuivante
+	
+// On crée la nouvelle combinaison à tenté, qui determine la
+// presence ou non d'une couleur. Tout en tenant compte des
+// positions des
+// boules de couleurs deja trouvées
+            Pour i de 0 à k Faire 
+                Si (combiTrouve[i] = 0) Faire
+                    combiTente[i] <- coul
+                Sinon
+                    combiTente[i] <- combiTrouve[i]
+            Fin Pour
+            
+// On détermine le nombre de bien placés et mal placés
+nbBienPlace <- nbBienPlace(combi,combiTente,k)
+nbMalPlace <- nbCommuns(combi,combiTente,k) - nbBienPlace(combi,combiTente,k)
+            
+// incrémentation du nombre de combi tenté
+            nbTentative <- nbTentative + 1
+
+// Analyse des indications données par le nbBienPlace et nbMalPlace
+            
+// Si le nombre de bien placé = k, pas la peine de continué on a fini la résolution
+	Si (nbBienPlace = k) Faire
+                Stopper l'iteration
+	Fin si       
+	  
+// Détermination du nombre de boules de la couleur courante
+            nbBoules <- nbBienPlace - nbTrouve
+            
+            
+// Tester si la couleur est présente
+	Si nbBoules >= 1 ET coul <= (n + 1) Faire
+// Si la couleur suivante est pas présente on la passe en couleur courante
+	Sinon Faire
+		Si   (nbBoulesSuivante>0) Faire
+		     coul <- coulSuivante
+                        nbBoules <- nbBoulesSuivante
+                   Fin si
+ // Initialisation du nb de boules de la couleur suivante
+		nbBoulesSuivante <- 0
+		coulSuivante <- coul + 1
+                    
+// Recherche de la position de chaque couleurs
+		Pour x de 1à nbBoules Faire 
+// On initialise nbMalPlace à un nombre différent de 0
+		nbMalPlace <- 1
+                        
+// indice de la position testé pour trouver l'emplacement de
+// la couleur coul. On ne test pas une position dont on
+// connais deja la
+// couleur. Donc on crée une boucle qui cherche une
+// position possible.
+		pos <- 0
+                        
+		Tant que nbMalPlace > 0 Faire
+// Recherche d'une position a tester qui n'a pas deja été trouvé
+			Tant que (pos < k) ET (combiTrouve[pos] != 0)
+				pos <- pos  + 1
+                            
+// On crée la nouvelle combinaison à tenté, qui cherche
+// la position exacte de la boule de couleur
+// en cour. Tout en tenant compte des positions des
+// boules de couleurs deja trouvées
+			Pour i de 0 à k Faire
+			
+// Si la case courante n'est pas une case dont on connais la couleur
+                            		Si combiTrouve[i] = 0 Faire 	
+// Si la case n'est pas la case testé, on met la boule de couleur supérieur
+
+					Si (i != pos) 
+					combiTente[i] <- coulSuivante
+					Sinon
+                                        combiTente[i] <- coul
+                                        	Fin si
+                                    Sinon
+					combiTente[i] <- combiTrouve[i]
+				Fin si
+			Fin pour
+		
+// Test de la nouvelle tentative puis calcul du nombre de boules mal placé
+
+		nbBienPlace <- appel de nbBienPlace(combi,combiTente,k)
+		nbCommuns <- appel de nbCommuns(combi,combiTente,k)
+		nbMalPlace <- nbCommuns - nbBienPlace
+			
+// On incrémente le nombre de tentatives
+		nbTentative <- nbTentative + 1
+                            
+// Analyse des indication donnée (Application du Critère 3)
+		nbCoulSuivante <- (nbCommuns - nbTrouve - 1)
+			
+// Si la couleur suivante testé n'est pas présente on passe à la suivante
+			Si nbCoulSuivante = 0
+				coulSuivante <- coulSuivante + 1
+			
+                            Sinon
+                                nbBoulesSuivante <- nbCoulSuivante;
+			
+                            // On incrémente la position testé
+                            pos <- pos + 1 
+                            Fin si
+                        Fin pour
+                        
+// A la sortie de la boucle Pour, on a la position de la boule de
+// couleur -> pos - 1
+// On ajoute donc cette boule à la combinaison contenant les
+// boules Trouvées
+                        combiTrouve[pos - 1] <- coul;
+// On incrémente le nombre de boule trouvées
+                        nbTrouve <- nbTrouve + 1
+                    
+		Fin Si	
+                    
+              Jusqu'à nbBoulesSuivante >0 ET nbBienPlace != k 
+	Sinon
+		coulSuivante <- coulSuivante + 1
+            
+        Fin Tant que
+        
+	// Renvoi du nombre de tentatives effectuées
+        retourner nbTentative
+Fin fonction
+\end{lstlisting}
+
+
+
+\end{document}

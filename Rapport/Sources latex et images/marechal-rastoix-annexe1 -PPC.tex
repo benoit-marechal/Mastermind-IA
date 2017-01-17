@@ -1,0 +1,95 @@
+\documentclass[12pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{epstopdf}
+
+                               % Activate to display a given date or no date
+
+
+\usepackage{times}
+\usepackage[frenchb]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{amssymb,latexsym,amsmath,graphicx,pstricks,pst-node}
+%\usepackage{layout}
+\setlength{\textheight}{23cm}
+\setlength{\textwidth}{16.6cm}
+\setlength{\hoffset}{0cm}
+\setlength{\voffset}{-2cm}
+\setlength{\marginparwidth}{0cm}
+\setlength{\marginparsep}{0cm}
+%\setlength{\headheight}{0.0in}
+%\setlength{\headsep}{0.0in}
+\setlength{\oddsidemargin}{0cm}
+%\setlength{\parindent}{0pt}
+\usepackage{listings}						%Pour mettre en forme tous ce qui est 'code source'
+
+\sloppy  									%??
+
+\bibliographystyle{plain}
+
+
+
+\begin{document}
+
+\includegraphics[height=2 cm]{logo_ub.pdf}
+\hspace{9cm}
+\includegraphics[height=2 cm]{logo_ufr.pdf}\\
+
+\vspace{3.5cm}
+
+\begin{center}
+\large{M1 Informatique - Module Algorithmique et complexité}\\
+\quad \\
+\vspace{2cm}
+\huge{Intelligence Artificielle \& Mastermind} 
+\quad \\
+\vspace{1cm}
+\huge{Annexe 1 : Rappels sur la programmation par contrainte} 
+
+\vspace{2cm}
+
+\quad \\
+\vspace{1.5cm}
+\large{Benoît MARECHAL et Marc RASTOIX}\\
+\vspace{0.5cm}
+\large{Encadrant : Jean-Jacques CHABRIER}
+\end{center}
+
+%\maketitle
+\titlepage
+\newpage
+
+%Les blocs de code
+\lstset{numbers=left, numberstyle=\small,breaklines=true, stepnumber=1, numbersep=10pt, frameround=fttt, basicstyle=\small}
+
+\section{Introduction}
+La programmation par contraintes (PPC) en Intelligence Artificielle consiste à modéliser un problème sous forme de variables, avec un domaine discret et entretenant des relations entre elles. Résoudre le problème consiste à choisir heuristiquement des valeurs pour des variables libres, et à propager cette information via ces relations. Ce domaine est très actif depuis 30 ans, pour résoudre efficacement des problèmes combinatoires.
+
+\section{Modélisation d'un problème : le CSP}
+
+
+
+Un CSP (Problème de Satisfaction de Contraintes) est un problème modélisé sous la forme d'un ensemble de contraintes posées sur des variables, chacune de ces variables prenant ses valeurs dans un domaine. De façon plus formelle, on définie un CSP par un triplet (X,D,C) tel que :
+
+\begin{itemize}
+\item{X = \{ X1, X2, ..., Xn\} est l'ensemble des variables (les inconnues) du problème}\item{D est la fonction qui associe à chaque variable Xi son domaine D(Xi), c'est-à-dire l'ensemble des valeurs que peut prendre Xi}\item{C = \{C1, C2, ..., Ck\} est l'ensemble des contraintes. Chaque contrainte Cj est une relation entre certaines variables de X, restreignant les valeurs que peuvent prendre simultanément ces variables.}\end{itemize}Par exemple, on peut définir le CSP (X,D,C) suivant :\\    $X =\{a,b,c,d\}$
+    $D(a) = D(b) = D(c) = D(d) = \{0,1\}$
+
+    $C = \{ a \neq b, c \neq d, a+c < b \}$
+
+~
+Ce CSP comporte 4 variables a, b, c et d, chacune pouvant prendre 2 valeurs (0 ou 1). Ces variables doivent respecter les contraintes suivantes : 
+\begin{itemize}
+\item{a doit être différente de b}
+\item{c doit être différente de d}
+\item{La somme de a et c doit être inférieure à b}
+\end{itemize}
+
+\section{Définition d'une contrainte}Une contrainte est une relation logique entre différentes inconnues, appelées variables, chacune prenant ses valeurs dans un ensemble donné, appelé domaine. Ainsi, une contrainte restreint les valeurs que peuvent prendre simultanément les variables. Par exemple, la contrainte "$x + 3 \times y = 12$" restreint les valeurs que l'on peut affecter simultanément aux variables x et y.Une contrainte est relationnelle : elle n'est pas "dirigée" comme une fonction qui définit la valeur d'une variable en fonction des valeurs des autres variables.    Ainsi, la contrainte "$x - 2 \times y = z"$ permet de déterminer z dès lors que x et y sont connues, mais aussi x dès lors que y et z sont connues et y dès lors que x et z sont connues. Notons également qu'une contrainte est déclarative : elle spécifie quelle relation on doit retrouver entre les variables, sans donner de procédure opérationnelle pour effectivement assurer/vérifier cette relation.    Ainsi, lorsqu'on pose la contrainte "$x - 2 \times y = z$", on ne s'occupe pas de donner un algorithme permettant de résoudre cette équation. Notons enfin que l'ordre dans lequel sont posées les contraintes n'est pas significatif : la seule chose importante à la fin est que toutes les contraintes soient satisfaites.
+
+
+
+\end{document}  
